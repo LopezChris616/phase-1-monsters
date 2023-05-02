@@ -1,27 +1,57 @@
-function init() {
+document.addEventListener("DOMContentLoaded", () => {
     getMonsters();
-}
-
-init();
+    monsterSubmit();
+})
 
 function getMonsters() {
-    const monsterContainer = document.getElementById("monster-container");
-    fetch("http://localhost:3000/monsters?_limit=20")
+    fetch("http://localhost:3000/monsters?_limit=50")
         .then(res => res.json())
-        .then(monsters => {
-            monsters.forEach(monster => {
-                const monsterName = document.createElement("h2");
-                const monsterAge = document.createElement("h4");
-                const monsterBio = document.createElement("p");
-                const monsterInfo = document.createElement("div");
+        .then(monsters => monsters.forEach(monster => displayMonsters(monster)))
+        .catch(err => console.log(err))
+}
 
-                monsterName.textContent = monster.name;
-                monsterAge.textContent = monster.age;
-                monsterBio.textContent = monster.description;
+function displayMonsters(monster) {
+    const monsterContainer = document.getElementById("monster-container");
+    const monsterName = document.createElement("h2");
+    const monsterAge = document.createElement("h4");
+    const monsterBio = document.createElement("p");
+    const monsterInfo = document.createElement("div");
 
-                monsterInfo.append(monsterName, monsterAge, monsterBio);
+    monsterName.textContent = monster.name;
+    monsterAge.textContent = `Age: ${monster.age}`;
+    monsterBio.textContent = `Bio: ${monster.description}`;
 
-                monsterContainer.appendChild(monsterInfo);
-            })
+    monsterInfo.append(monsterName, monsterAge, monsterBio);
+
+    monsterContainer.appendChild(monsterInfo);
+}
+
+function monsterSubmit() {
+    const monsterForm = document.getElementById("monster-form");
+    monsterForm.addEventListener("submit", event => {
+        event.preventDefault();
+
+        const monsterObj = {
+            name: event.target[0].value,
+            age: event.target[1].value,
+            description: event.target[2].value
+        }
+
+        console.log("click");
+
+        fetch("http://localhost:3000/monsters", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json" 
+            },
+            body: JSON.stringify(monsterObj)
         })
+            .then(res => res.json())
+            .then(monster => console.log(monster))
+            .catch(err => console.log(err));
+        
+        displayMonsters(monsterObj);
+
+    });
 }
