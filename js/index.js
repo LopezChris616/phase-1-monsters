@@ -1,17 +1,20 @@
 document.addEventListener("DOMContentLoaded", () => {
-    getMonsters();
-    monsterSubmit();
-})
+    const monsterContainer = document.getElementById("monster-container");
+    let page = 1;
 
-function getMonsters() {
-    fetch("http://localhost:3000/monsters?_limit=50")
+    getMonsters(page, monsterContainer);
+    monsterSubmit();
+    paginateHandler(page, monsterContainer);
+});
+
+function getMonsters(page, container) {
+    fetch(`http://localhost:3000/monsters?_limit=50&_page=${page}`)
         .then(res => res.json())
-        .then(monsters => monsters.forEach(monster => displayMonsters(monster)))
-        .catch(err => console.log(err))
+        .then(monsters => monsters.forEach(monster => displayMonsters(monster, container)))
+        .catch(err => console.log(err));
 }
 
-function displayMonsters(monster) {
-    const monsterContainer = document.getElementById("monster-container");
+function displayMonsters(monster, container) {
     const monsterName = document.createElement("h2");
     const monsterAge = document.createElement("h4");
     const monsterBio = document.createElement("p");
@@ -23,21 +26,18 @@ function displayMonsters(monster) {
 
     monsterInfo.append(monsterName, monsterAge, monsterBio);
 
-    monsterContainer.appendChild(monsterInfo);
+    container.appendChild(monsterInfo);
 }
 
 function monsterSubmit() {
     const monsterForm = document.getElementById("monster-form");
     monsterForm.addEventListener("submit", event => {
         event.preventDefault();
-
         const monsterObj = {
             name: event.target[0].value,
             age: event.target[1].value,
             description: event.target[2].value
-        }
-
-        console.log("click");
+        };
 
         fetch("http://localhost:3000/monsters", {
             method: "POST",
@@ -55,3 +55,42 @@ function monsterSubmit() {
 
     });
 }
+
+function paginateHandler(pageNum, container) {
+    const pageForward = document.getElementById("forward");
+    const pageBack = document.getElementById("back");
+    const pageNumDisplay = document.getElementById("page-num");
+
+    backDisable(pageNumDisplay, pageBack);
+    
+    pageForward.addEventListener("click", () => {
+        pageNum += 1;
+        paginatePages(pageNum, container, pageNumDisplay, pageForward, pageBack);
+    });
+
+    pageBack.addEventListener("click", () => {
+        pageNum -= 1;
+        paginatePages(pageNum, container, pageNumDisplay, pageForward, pageBack);
+    });
+}
+
+function backDisable(pageNum, pageBack) {
+    pageNum.textContent === "1" ? pageBack.disabled = true : pageBack.disabled = false;
+}
+
+function paginatePages(pageNum, container, pageDisplay, pageForward, pageBack) {
+    container.textContent = "";
+    pageDisplay.textContent = pageNum;
+    getMonsters(pageNum, container);
+
+    setTimeout(() => {
+        if(container.childElementCount < 50) {
+            pageForward.disabled = true;
+        } else {
+            pageForward.disabled = false;
+        }
+    }, 400);
+    
+    backDisable(pageDisplay, pageBack);
+}
+
